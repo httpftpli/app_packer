@@ -146,15 +146,21 @@ bool  pack(){
             break;
         }
         QStringList verlist = list.at(0).split(".",QString::SkipEmptyParts);
-        if((verlist.count()!=6)||(verlist.at(0)!="A")
-                ||(verlist.at(1).size()!=4)||(verlist.at(2).size()!=4)
+        if(verlist.count()!=6 || verlist.at(0)!="A"
+                || verlist.at(1).size()!=4 || verlist.at(2).size()>6
                 ){
             cout<<"\tformat error"<<endl;
             ret = false ;
             break;
         }
         appsection.hardwareFlag = *(unsigned int *)verlist.at(1).toLatin1().data();
-        appsection.customFlag = *(unsigned int *)verlist.at(2).toLatin1().data();
+        QString customFlagstr = verlist.at(2);
+        unsigned int customflag = 0;
+        for(int j=0;j<qMax(customFlagstr.size(),4);j++){
+               unsigned char temp = *(verlist.at(2).toLatin1().data()+j);
+               customflag |= temp<<j*8;
+        }
+        appsection.customFlag = customflag;
         bool ok;
         appsection.imageMainRev = verlist.at(3).toInt(&ok);
         if(ok==false){
@@ -242,7 +248,8 @@ int main(int argc, char *argv[])
     QString str = (list.count()<2)?QString():list.at(1);
     if(!str.isEmpty() && QDir(str).exists()){
             QDir::setCurrent(str);
-    }    
+    }
+    //QDir::setCurrent(QCoreApplication::applicationDirPath());
     pack();
     return a.exec();
 }
